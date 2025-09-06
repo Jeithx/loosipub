@@ -1,0 +1,28 @@
+﻿using Core.Constants;
+using Core.Models.Write;
+using Core.Utilities.Results;
+using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Claims;
+namespace API.Controllers.v1.UserController
+{
+    public partial class UserController
+    {
+        [HttpPut("ChangePassword")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePassword model)
+        {
+            var claims = _tokenHelper.GetClaimsFromToken(HttpContext);
+            if (claims == null)
+                return Unauthorized(Messages.UnAuthorize);
+
+            var userId = claims.FindFirst(ClaimTypes.NameIdentifier).Value;
+
+            model.Id = long.Parse(userId);
+            var result = await _service.ChangePassword(model);
+
+            if (result.Success)
+                return Ok(new SuccessDataResult<bool>(result.Data, result.Message));
+            else
+                return BadRequest(new ErrorDataResult<bool>(result.Message));
+        }
+    }
+}
